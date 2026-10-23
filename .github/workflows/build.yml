@@ -12,6 +12,15 @@ jobs:
         mkdir project
         unzip *.zip -d project
         
+    - name: Find and Move Project Files
+      run: |
+        cd project
+        inner_dir=$(find . -name package.json -exec dirname {} \; | head -n 1)
+        if [ "$inner_dir" != "." ]; then
+          mv $inner_dir/* .
+          mv $inner_dir/.* . 2>/dev/null || true
+        fi
+        
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -19,7 +28,6 @@ jobs:
         
     - name: Install and Build
       run: |
-        cd project
         npm install
         npm run build
         
@@ -31,7 +39,6 @@ jobs:
         
     - name: Setup Capacitor
       run: |
-        cd project
         npm install @capacitor/core @capacitor/cli @capacitor/android
         npx cap init "Avida" "com.avida.app" --web-dir=dist
         npx cap add android
@@ -39,7 +46,7 @@ jobs:
         
     - name: Build APK
       run: |
-        cd project/android
+        cd android
         chmod +x gradlew
         ./gradlew assembleDebug
         
@@ -47,4 +54,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: avida-apk
-        path: project/android/app/build/outputs/apk/debug/app-debug.apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
